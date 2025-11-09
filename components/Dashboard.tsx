@@ -1,23 +1,39 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useWalletStore } from '@/store/walletStore'
 import { useIPStore } from '@/store/ipStore'
+import { useToastStore } from '@/store/toastStore'
+import { generateSampleData } from '@/lib/sampleData'
 import WalletConnect from './WalletConnect'
 import IPRegistrationForm from './IPRegistrationForm'
 import IPGraph from './IPGraph'
 import AssetList from './AssetList'
 import IPDetailModal from './IPDetailModal'
-import { Plus, LayoutGrid, List, Network, Sparkles, TrendingUp } from 'lucide-react'
+import { Plus, LayoutGrid, List, Network, Sparkles, TrendingUp, Database } from 'lucide-react'
 
 type ViewMode = 'graph' | 'list' | 'register' | 'my-assets' | 'discover'
 
 export default function Dashboard() {
-  const { isConnected, address } = useWalletStore()
-  const { assets, getAssetsByCreator } = useIPStore()
+  const { isConnected, address, checkConnection } = useWalletStore()
+  const { assets, getAssetsByCreator, addAsset } = useIPStore()
+  const { showToast } = useToastStore()
   const [viewMode, setViewMode] = useState<ViewMode>('graph')
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null)
   const [remixParentId, setRemixParentId] = useState<string | null>(null)
+
+  // Check wallet connection on mount
+  useEffect(() => {
+    checkConnection()
+  }, [checkConnection])
+
+  const loadSampleData = () => {
+    const sampleData = generateSampleData()
+    sampleData.forEach((asset) => {
+      addAsset(asset)
+    })
+    showToast('Sample data loaded successfully!', 'success')
+  }
 
   const myAssets = address ? getAssetsByCreator(address) : []
   const publicAssets = assets.filter((asset) => !address || asset.creator.toLowerCase() !== address.toLowerCase())
@@ -134,7 +150,18 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {viewMode === 'graph' && (
-          <div className="bg-slate-900/30 rounded-lg border border-slate-700 p-6 min-h-[600px]">
+          <div className="bg-slate-900/30 rounded-lg border border-slate-700 p-6 min-h-[600px] relative">
+            {assets.length === 0 && (
+              <div className="absolute top-4 right-4 z-10">
+                <button
+                  onClick={loadSampleData}
+                  className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 rounded-lg text-purple-400 text-sm transition-colors flex items-center gap-2"
+                >
+                  <Database className="w-4 h-4" />
+                  Load Sample Data
+                </button>
+              </div>
+            )}
             <IPGraph
               onNodeClick={(nodeId) => setSelectedAssetId(nodeId)}
             />
@@ -213,7 +240,7 @@ export default function Dashboard() {
                 assets={publicAssets}
                 onRemix={(assetId) => {
                   if (!isConnected) {
-                    alert('Please connect your wallet to create a remix')
+                    showToast('Please connect your wallet to create a remix', 'warning')
                     return
                   }
                   setRemixParentId(assetId)
@@ -233,7 +260,7 @@ export default function Dashboard() {
           onClose={() => setSelectedAssetId(null)}
           onRemix={(assetId) => {
             if (!isConnected) {
-              alert('Please connect your wallet to create a remix')
+              showToast('Please connect your wallet to create a remix', 'warning')
               return
             }
             setRemixParentId(assetId)

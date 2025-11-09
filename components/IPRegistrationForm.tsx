@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react'
 import { useWalletStore } from '@/store/walletStore'
 import { useIPStore } from '@/store/ipStore'
+import { useToastStore } from '@/store/toastStore'
 import { StoryProtocolService } from '@/lib/storyProtocol'
 import { LicenseType, IPAsset } from '@/types'
 import { Upload, X, Loader2 } from 'lucide-react'
@@ -21,6 +22,7 @@ const TAGS = ['AI', 'Music', 'Code', 'Art', 'Writing', 'Video', 'Design', 'Data'
 export default function IPRegistrationForm({ onSuccess, parentId }: { onSuccess?: () => void; parentId?: string }) {
   const { isConnected, address, signer } = useWalletStore()
   const { addAsset, createRemix, getAsset } = useIPStore()
+  const { showToast } = useToastStore()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [formData, setFormData] = useState({
@@ -34,12 +36,12 @@ export default function IPRegistrationForm({ onSuccess, parentId }: { onSuccess?
     e.preventDefault()
 
     if (!isConnected || !address) {
-      alert('Please connect your wallet first')
+      showToast('Please connect your wallet first', 'warning')
       return
     }
 
     if (!formData.title.trim()) {
-      alert('Please enter a title')
+      showToast('Please enter a title', 'warning')
       return
     }
 
@@ -129,14 +131,22 @@ export default function IPRegistrationForm({ onSuccess, parentId }: { onSuccess?
       })
       setSelectedFile(null)
 
+      showToast(
+        parentId 
+          ? 'Remix created successfully!' 
+          : 'IP asset registered successfully!',
+        'success'
+      )
+
       if (onSuccess) {
         onSuccess()
-      } else {
-        alert('IP asset registered successfully!')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error registering IP:', error)
-      alert('Failed to register IP asset. Please try again.')
+      showToast(
+        error?.message || 'Failed to register IP asset. Please try again.',
+        'error'
+      )
     } finally {
       setIsSubmitting(false)
     }

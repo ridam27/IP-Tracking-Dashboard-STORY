@@ -24,6 +24,16 @@ export default function IPGraph({ width = 1200, height = 800, onNodeClick }: IPG
     const svg = d3.select(svgRef.current)
     const g = svg.append('g')
 
+    // Add zoom behavior
+    const zoom = d3
+      .zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.1, 4])
+      .on('zoom', (event) => {
+        g.attr('transform', event.transform.toString())
+      })
+
+    svg.call(zoom as any)
+
     // Create nodes and edges
     const nodes: IPGraphNode[] = assets.map((asset) => ({
       id: asset.id,
@@ -223,8 +233,12 @@ export default function IPGraph({ width = 1200, height = 800, onNodeClick }: IPG
   }
 
   return (
-    <div className="w-full h-full bg-slate-900/50 rounded-lg border border-slate-700 overflow-hidden">
-      <svg ref={svgRef} width={width} height={height} className="w-full h-full" />
+    <div className="w-full h-full bg-slate-900/50 rounded-lg border border-slate-700 overflow-hidden relative">
+      <div className="absolute top-4 left-4 z-10 bg-slate-900/80 backdrop-blur-sm border border-slate-700 rounded-lg p-3">
+        <p className="text-xs text-gray-400 mb-1">Graph Controls</p>
+        <p className="text-xs text-gray-500">Scroll to zoom • Drag to pan • Click nodes for details</p>
+      </div>
+      <svg ref={svgRef} width={width} height={height} className="w-full h-full cursor-move" />
     </div>
   )
 }
