@@ -108,14 +108,28 @@ export default function IPDetailModal({ assetId, onClose, onRemix }: IPDetailMod
           {asset.fileUrl && (
             <div>
               <h3 className="text-sm font-medium text-gray-400 mb-2">File</h3>
-              <a
-                href={asset.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary-400 hover:text-primary-300 text-sm break-all"
-              >
-                {asset.fileUrl}
-              </a>
+              {asset.fileUrl.startsWith('#mock-ipfs-') ? (
+                <div>
+                  <p className="text-gray-400 text-sm mb-2">
+                    Mock IPFS URL (for demo purposes)
+                  </p>
+                  <p className="text-primary-400 text-sm break-all font-mono">
+                    {asset.fileUrl.replace('#mock-ipfs-', 'IPFS Hash: ')}
+                  </p>
+                  <p className="text-gray-500 text-xs mt-1">
+                    In production, this would be a real IPFS gateway URL
+                  </p>
+                </div>
+              ) : (
+                <a
+                  href={asset.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary-400 hover:text-primary-300 text-sm break-all"
+                >
+                  {asset.fileUrl}
+                </a>
+              )}
             </div>
           )}
 

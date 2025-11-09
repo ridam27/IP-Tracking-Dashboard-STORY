@@ -143,15 +143,20 @@ export default function AssetList({ assets, onRemix, onViewDetails }: AssetListP
               </button>
             )}
             {asset.fileUrl && (
-              <a
-                href={asset.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  if (asset.fileUrl?.startsWith('#mock-ipfs-')) {
+                    alert('This is a mock IPFS URL. In production, this would link to the actual file on IPFS.')
+                  } else {
+                    window.open(asset.fileUrl, '_blank', 'noopener,noreferrer')
+                  }
+                }}
                 className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 border border-slate-600 rounded-lg text-gray-300 text-sm transition-colors flex items-center gap-2"
               >
                 <ExternalLink className="w-4 h-4" />
-                View File
-              </a>
+                {asset.fileUrl?.startsWith('#mock-ipfs-') ? 'View File (Mock)' : 'View File'}
+              </button>
             )}
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { useIPStore } from '@/store/ipStore'
 import { IPGraphNode, IPGraphEdge } from '@/types'
@@ -14,9 +14,14 @@ interface IPGraphProps {
 export default function IPGraph({ width = 1200, height = 800, onNodeClick }: IPGraphProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const { assets } = useIPStore()
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    if (!svgRef.current || assets.length === 0) return
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isMounted || !svgRef.current || assets.length === 0) return
 
     // Clear previous render
     d3.select(svgRef.current).selectAll('*').remove()
@@ -219,7 +224,17 @@ export default function IPGraph({ width = 1200, height = 800, onNodeClick }: IPG
       tooltip.remove()
       simulation.stop()
     }
-  }, [assets, width, height, onNodeClick])
+  }, [assets, width, height, onNodeClick, isMounted])
+
+  if (!isMounted) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400">
+        <div className="text-center">
+          <p className="text-sm">Loading graph...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (assets.length === 0) {
     return (

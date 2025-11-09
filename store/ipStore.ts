@@ -3,16 +3,18 @@ import { IPAsset } from '@/types'
 
 interface IPState {
   assets: IPAsset[]
+  hydrated: boolean
   addAsset: (asset: IPAsset) => void
   getAsset: (id: string) => IPAsset | undefined
   getAssetsByCreator: (creator: string) => IPAsset[]
   getDerivatives: (parentId: string) => IPAsset[]
   createRemix: (parentId: string, newAsset: Omit<IPAsset, 'id' | 'ipType' | 'parentId' | 'timestamp' | 'derivatives'>) => IPAsset
+  hydrate: () => void
 }
 
 const generateId = () => `ip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-// Load from localStorage on init
+// Load from localStorage (client-side only)
 const loadAssets = (): IPAsset[] => {
   if (typeof window === 'undefined') return []
   try {
@@ -34,7 +36,13 @@ const saveAssets = (assets: IPAsset[]) => {
 }
 
 export const useIPStore = create<IPState>((set, get) => ({
-  assets: loadAssets(),
+  assets: [],
+  hydrated: false,
+  hydrate: () => {
+    if (get().hydrated) return
+    const loadedAssets = loadAssets()
+    set({ assets: loadedAssets, hydrated: true })
+  },
   addAsset: (asset) => {
     const newAssets = [...get().assets, asset]
     set({ assets: newAssets })

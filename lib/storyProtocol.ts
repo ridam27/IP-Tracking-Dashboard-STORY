@@ -79,11 +79,13 @@ export class StoryProtocolService {
   static async uploadToIPFS(file: File): Promise<{ hash: string; url: string }> {
     await new Promise((resolve) => setTimeout(resolve, 2000))
 
-    // Mock IPFS hash
+    // Mock IPFS hash (using placeholder format to avoid 500 errors)
     const hash = `Qm${Math.random().toString(36).substr(2, 44)}`
-    const url = `https://ipfs.io/ipfs/${hash}`
+    // Use a placeholder URL that won't cause 500 errors
+    // In production, this would be a real IPFS gateway URL
+    const url = `#mock-ipfs-${hash}`
 
-    console.log('Mock IPFS upload:', { hash, url })
+    console.log('Mock IPFS upload:', { hash, url, fileName: file.name })
 
     return { hash, url }
   }

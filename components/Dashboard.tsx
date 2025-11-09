@@ -16,16 +16,19 @@ type ViewMode = 'graph' | 'list' | 'register' | 'my-assets' | 'discover'
 
 export default function Dashboard() {
   const { isConnected, address, checkConnection } = useWalletStore()
-  const { assets, getAssetsByCreator, addAsset } = useIPStore()
+  const { assets, getAssetsByCreator, addAsset, hydrate } = useIPStore()
   const { showToast } = useToastStore()
   const [viewMode, setViewMode] = useState<ViewMode>('graph')
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null)
   const [remixParentId, setRemixParentId] = useState<string | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
 
-  // Check wallet connection on mount
+  // Hydrate store and check wallet connection on mount (client-side only)
   useEffect(() => {
+    setIsMounted(true)
+    hydrate()
     checkConnection()
-  }, [checkConnection])
+  }, [checkConnection, hydrate])
 
   const loadSampleData = () => {
     const sampleData = generateSampleData()
@@ -35,14 +38,17 @@ export default function Dashboard() {
     showToast('Sample data loaded successfully!', 'success')
   }
 
-  const myAssets = address ? getAssetsByCreator(address) : []
-  const publicAssets = assets.filter((asset) => !address || asset.creator.toLowerCase() !== address.toLowerCase())
+  // Only compute derived data after mount to avoid hydration mismatch
+  const myAssets = isMounted && address ? getAssetsByCreator(address) : []
+  const publicAssets = isMounted 
+    ? assets.filter((asset) => !address || asset.creator.toLowerCase() !== address.toLowerCase())
+    : []
 
   const stats = {
-    totalIPs: assets.length,
-    myIPs: myAssets.length,
-    totalDerivatives: assets.filter((a) => a.ipType !== 'Original').length,
-    totalRevenue: myAssets.reduce((sum, asset) => sum + asset.royalties.totalEarned, 0),
+    totalIPs: isMounted ? assets.length : 0,
+    myIPs: isMounted ? myAssets.length : 0,
+    totalDerivatives: isMounted ? assets.filter((a) => a.ipType !== 'Original').length : 0,
+    totalRevenue: isMounted ? myAssets.reduce((sum, asset) => sum + asset.royalties.totalEarned, 0) : 0,
   }
 
   return (
